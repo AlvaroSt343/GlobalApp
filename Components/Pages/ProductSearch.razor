@@ -1,0 +1,57 @@
+﻿@page "/productsearch"
+@using GlobalApp.Models
+@using GlobalApp.Services
+@inject ProductSearchService ProductSearchService
+
+<h3>Búsqueda de Productos</h3>
+
+<div class="form-group">
+    <label for="searchKeyword">Buscar producto</label>
+    <input id="searchKeyword" @bind="searchKeyword" class="form-control" placeholder="Ej. Coffee Machine" />
+</div>
+
+<button @onclick="OnSearchClicked" class="btn btn-primary">Buscar</button>
+
+@if (isLoading)
+{
+    <p>Cargando...</p>
+}
+else if (products != null && products.Count > 0)
+{
+    <div class="product-list">
+        @foreach (var product in products)
+        {
+            <div class="product-item">
+                <img src="@product.ProductImage" alt="@product.ProductTitle" class="product-image"/>
+                <div class="product-info">
+                    <h4>@product.ProductTitle</h4>
+                    <p>Precio: @product.Price.ToString("C")</p>
+                    <p>Rating: @product.Rating</p>
+                    <p><a href="@product.ProductUrl" target="_blank" class="btn btn-link">Ver en Amazon</a></p>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (products != null && products.Count == 0)
+{
+    <p>No se encontraron productos.</p>
+}
+
+@code {
+    private string searchKeyword = "";
+    private List<Product> products;
+    private bool isLoading = false;
+
+    private async Task OnSearchClicked()
+    {
+        if (string.IsNullOrEmpty(searchKeyword))
+        {
+            return; // No hacer nada si el término de búsqueda está vacío
+        }
+
+        isLoading = true;
+        products = await ProductSearchService.SearchProductsAsync(searchKeyword);
+        isLoading = false;
+    }
+}

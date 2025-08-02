@@ -1,0 +1,50 @@
+﻿@page "/productdetail"
+@using GlobalApp.Models
+@using GlobalApp.Services
+@inject ProductDetailService ProductDetailService
+
+<h3>Detalles del Producto</h3>
+
+<!-- Campo de entrada para ASIN -->
+<div class="form-group">
+    <label for="asin">Ingrese ASIN del Producto</label>
+    <input id="asin" @bind="asin" class="form-control" placeholder="Ej. B09J9X8DLR" />
+</div>
+
+<button @onclick="OnGetProductDetailsClicked" class="btn btn-primary">Obtener Detalles</button>
+
+@if (isLoading)
+{
+    <p>Cargando...</p>
+}
+else if (product != null)
+{
+   @*  <div class="product-details">
+        <img src="@product." alt="@product.Title" class="product-image" />
+        <div class="product-info">
+            <h4>@product.Title</h4>
+            <p>Precio: @product.Price.ToString("C")</p>
+            <p>Rating: @product.Rating</p>
+            <p>Vendido por: @product.RatingNum</p>
+            <a href="@product.Link" target="_blank" class="btn btn-link">Ver en Amazon</a>
+        </div>
+    </div> *@
+}
+
+@code {
+    private string asin = "";
+    private ProductDetailResponse product;
+    private bool isLoading = false;
+
+    private async Task OnGetProductDetailsClicked()
+    {
+        if (string.IsNullOrEmpty(asin))
+        {
+            return; // No hacer nada si el ASIN está vacío
+        }
+
+        isLoading = true;
+        product = await ProductDetailService.GetProductDetailsAsync(asin);
+        isLoading = false;
+    }
+}

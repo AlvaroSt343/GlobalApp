@@ -1,0 +1,16 @@
+﻿@page "/home"
+@using GlobalApp.Services
+@inject NavigationManager Nav
+@inject SessionService Session
+
+<h3>Bienvenido a Home</h3>
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!Session.IsLogged)
+        {
+            Nav.NavigateTo("/login", true);
+        }
+    }
+}
