@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using GlobalApp.Models;
+﻿using GlobalApp.Models;
 using Newtonsoft.Json;
 
 namespace GlobalApp.Services
@@ -20,7 +18,7 @@ namespace GlobalApp.Services
             var request = new HttpRequestMessage
             {
                 Method = HttpMethod.Get,
-                RequestUri = new Uri($"https://realtime-amazon-data.p.rapidapi.com/product-details?asin={asin}&country=us"),
+                RequestUri = new Uri($"https://realtime-amazon-data.p.rapidapi.com/product-details?asin={asin}&country=mx"),
                 Headers =
                 {
                     { "x-rapidapi-key", "088461e73emsh427bd0ee1e055edp12fda4jsn1693ab9c24b2" },
@@ -28,14 +26,24 @@ namespace GlobalApp.Services
                 },
             };
 
-            // Realizamos la petición
-            using (var response = await _httpClient.SendAsync(request))
+            try
             {
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync();
-                var product = JsonConvert.DeserializeObject<ProductDetailResponse>(body);
-                return product;
+
+                // Realizamos la petición
+                using (var response = await _httpClient.SendAsync(request))
+                {
+                    response.EnsureSuccessStatusCode();
+                    var body = await response.Content.ReadAsStringAsync();
+                    var product = JsonConvert.DeserializeObject<ProductDetailResponse>(body);
+                    return product;
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+
         }
     }
 }

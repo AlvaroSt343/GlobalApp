@@ -10,7 +10,7 @@
     <input id="searchKeyword" @bind="searchKeyword" class="form-control" placeholder="Ej. Coffee Machine" />
 </div>
 
-<button @onclick="OnSearchClicked" class="btn btn-primary">Buscar</button>
+<button @onclick="OnSearchClicked" class="btn btn-primary mt-3">Buscar</button>
 
 @if (isLoading)
 {
@@ -21,13 +21,20 @@ else if (products != null && products.Count > 0)
     <div class="product-list">
         @foreach (var product in products)
         {
-            <div class="product-item">
-                <img src="@product.ProductImage" alt="@product.ProductTitle" class="product-image"/>
-                <div class="product-info">
-                    <h4>@product.ProductTitle</h4>
-                    <p>Precio: @product.Price.ToString("C")</p>
-                    <p>Rating: @product.Rating</p>
-                    <p><a href="@product.ProductUrl" target="_blank" class="btn btn-link">Ver en Amazon</a></p>
+            //truncar
+            string trimProductTitle = GetTrimmedTitle(product.ProductTitle);
+
+            <div class="row product-item">
+                <div class="col-4">
+                    <img src="@product.ProductImage" alt="@product.ProductTitle" class="product-image" />
+                </div>
+                <div class="col-8">
+                    <div class="product-info">
+                        <h4>@trimProductTitle</h4>
+                        <h5>Precio: @product.Price</h5>
+                        <h5>Rating: @product.Rating</h5>
+                        <a href="/productdetail?asin=@product.Asin" class="btn btn-primary">Ver Detalles</a>
+                    </div>
                 </div>
             </div>
         }
@@ -47,11 +54,18 @@ else if (products != null && products.Count == 0)
     {
         if (string.IsNullOrEmpty(searchKeyword))
         {
-            return; // No hacer nada si el término de búsqueda está vacío
+            return;
         }
 
         isLoading = true;
         products = await ProductSearchService.SearchProductsAsync(searchKeyword);
         isLoading = false;
+    }
+
+    // Método para truncar el título
+    private string GetTrimmedTitle(string title)
+    {
+        if (string.IsNullOrEmpty(title)) return title;
+        return title.Length > 40 ? title.Substring(0, 40) + "..." : title;
     }
 }

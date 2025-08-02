@@ -2,49 +2,82 @@
 @using GlobalApp.Models
 @using GlobalApp.Services
 @inject ProductDetailService ProductDetailService
+@inject NavigationManager Nav
 
 <h3>Detalles del Producto</h3>
-
-<!-- Campo de entrada para ASIN -->
-<div class="form-group">
-    <label for="asin">Ingrese ASIN del Producto</label>
-    <input id="asin" @bind="asin" class="form-control" placeholder="Ej. B09J9X8DLR" />
-</div>
-
-<button @onclick="OnGetProductDetailsClicked" class="btn btn-primary">Obtener Detalles</button>
 
 @if (isLoading)
 {
     <p>Cargando...</p>
 }
-else if (product != null)
+else if (productDetail != null)
 {
-   @*  <div class="product-details">
-        <img src="@product." alt="@product.Title" class="product-image" />
-        <div class="product-info">
-            <h4>@product.Title</h4>
-            <p>Precio: @product.Price.ToString("C")</p>
-            <p>Rating: @product.Rating</p>
-            <p>Vendido por: @product.RatingNum</p>
-            <a href="@product.Link" target="_blank" class="btn btn-link">Ver en Amazon</a>
+
+    <div class="row d-flex justify-content-center">
+        <div class="col-12">
+            @if (productDetail.Images != null && productDetail.Images.Any())
+            {
+                <img src="@productDetail.Images.FirstOrDefault()" alt="@productDetail.Title" class="product-image" />
+            }
+            else
+            {
+                <p>No hay imágenes disponibles para este producto.</p>
+            }
         </div>
-    </div> *@
+        <div class="col-12">
+            <h4>@productDetail.Title</h4>
+        </div>
+        <div class="col-12">
+            <strong>Precio: </strong>@productDetail.Price
+        </div>
+        <div class="col-6">
+            <strong>Calificación: </strong>@productDetail.Rating
+        </div>
+        <div class="col-6">
+            <strong>Calificaciones: </strong>@productDetail.RatingNumber
+        </div>
+        <div class="desc">
+            <strong>Sobre este artículo: </strong>
+            <ul>
+                @{
+                    if (productDetail.AboutThisItem.Count > 0)
+                    {
+                        @foreach (var item in productDetail.AboutThisItem)
+                        {
+                            <li>@item</li>
+                        }
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+
+    <div class="product-details">
+    </div>
+}
+else
+{
+    <p>Producto no encontrado.</p>
 }
 
 @code {
-    private string asin = "";
-    private ProductDetailResponse product;
-    private bool isLoading = false;
+    private ProductDetailResponse productDetail;
+    private bool isLoading = true;
 
-    private async Task OnGetProductDetailsClicked()
+
+    protected override async Task OnParametersSetAsync()
     {
+        var queryParams = Nav.Uri.Split('?')[1].Split('&');
+        var asinParam = queryParams.FirstOrDefault(param => param.StartsWith("asin="));
+        var asin = asinParam?.Split('=')[1];
+
         if (string.IsNullOrEmpty(asin))
         {
-            return; // No hacer nada si el ASIN está vacío
+            isLoading = false;
+            return;
         }
 
-        isLoading = true;
-        product = await ProductDetailService.GetProductDetailsAsync(asin);
+        productDetail = await ProductDetailService.GetProductDetailsAsync(asin);
         isLoading = false;
     }
 }
