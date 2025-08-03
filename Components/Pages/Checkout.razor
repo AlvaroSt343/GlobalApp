@@ -1,0 +1,45 @@
+﻿@page "/checkout"
+@using GlobalApp.Models
+@inject NavigationManager Nav
+
+<h3>Checkout</h3>
+
+@if (cartItem != null)
+{
+    <div>
+        <h4>@cartItem.Title</h4>
+        <p>Precio: @cartItem.Price</p>
+        <p>Cantidad: @cartItem.Quantity</p>
+        <p>Total: @cartItem.Price * @cartItem.Quantity</p>
+    </div>
+}
+
+<button class="btn btn-primary" @onclick="ProceedToCheckout">Finalizar Compra</button>
+
+@code {
+    [Parameter] public string Asin { get; set; }
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string Price { get; set; }
+    [Parameter] public int Quantity { get; set; } = 1;
+
+    private CartItem cartItem;
+
+    protected override void OnInitialized()
+    {
+        // Aquí puedes obtener el artículo del carrito utilizando el Asin y otros parámetros.
+        cartItem = new CartItem
+        {
+            Asin = Asin,
+            Title = Title,
+            Price = Price,
+            Quantity = Quantity
+        };
+    }
+
+    private void ProceedToCheckout()
+    {
+        // Aquí realizarías el proceso de compra
+        // Puedes navegar a una página de confirmación o procesar el pago, etc.
+        Nav.NavigateTo("/orderConfirmation");
+    }
+}

@@ -2,6 +2,7 @@
 @using GlobalApp.Models
 @using GlobalApp.Services
 @inject ProductDetailService ProductDetailService
+@inject CartService CartService
 @inject NavigationManager Nav
 
 <h3>Detalles del Producto</h3>
@@ -12,7 +13,6 @@
 }
 else if (productDetail != null)
 {
-
     <div class="row d-flex justify-content-center">
         <div class="col-12">
             @if (productDetail.Images != null && productDetail.Images.Any())
@@ -25,35 +25,35 @@ else if (productDetail != null)
             }
         </div>
         <div class="col-12">
-            <h4>@productDetail.Title</h4>
+            <h3>@productDetail.Title</h3>
         </div>
-        <div class="col-12">
-            <strong>Precio: </strong>@productDetail.Price
+        <div class="col-4 text-w">
+            <strong>Precio: </strong> <h4 class="text-success">$ @productDetail.Price - @productDetail.Currency</h4>
         </div>
-        <div class="col-6">
+        <div class="col-4">
             <strong>Calificación: </strong>@productDetail.Rating
         </div>
-        <div class="col-6">
+        <div class="col-4">
             <strong>Calificaciones: </strong>@productDetail.RatingNumber
         </div>
         <div class="desc">
             <strong>Sobre este artículo: </strong>
             <ul>
-                @{
-                    if (productDetail.AboutThisItem.Count > 0)
-                    {
-                        @foreach (var item in productDetail.AboutThisItem)
-                        {
-                            <li>@item</li>
-                        }
-                    }
+                @foreach (var item in productDetail.AboutThisItem)
+                {
+                    <li>@item</li>
                 }
             </ul>
         </div>
     </div>
 
-    <div class="product-details">
-    </div>
+    <button class="btn btn-cart my-2" @onclick="AddToCart">
+        Guardar en mi carrito
+    </button>
+
+    <button class="btn btn-buy my-2" @onclick="BuyProduct">
+        Comprar
+    </button>
 }
 else
 {
@@ -63,7 +63,6 @@ else
 @code {
     private ProductDetailResponse productDetail;
     private bool isLoading = true;
-
 
     protected override async Task OnParametersSetAsync()
     {
@@ -79,5 +78,31 @@ else
 
         productDetail = await ProductDetailService.GetProductDetailsAsync(asin);
         isLoading = false;
+    }
+
+    private async Task AddToCart()
+    {
+        // Crear un nuevo CartItem
+        var cartItem = new CartItem
+        {
+            Asin = productDetail.Details.ASIN,
+            Title = productDetail.Title,
+            Price = productDetail.Price,
+            Quantity = 1
+        };
+        try
+        {
+            await CartService.SaveToCartAsync(cartItem);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            throw;
+        }
+    }
+
+    private void BuyProduct()
+    {
+        Nav.NavigateTo($"/checkout?asin={productDetail.Details.ASIN}&title={productDetail.Title}&price={productDetail.Price}&quantity=1");
     }
 }
