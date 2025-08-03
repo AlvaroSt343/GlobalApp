@@ -1,0 +1,37 @@
+﻿@page "/reports"
+@inject NavigationManager Nav
+
+<h3>Reportes</h3>
+
+<div class="row report-cards">
+  <div class="col-12 col-md-4 mb-3">
+    <div class="card h-100" @onclick="GoToUsuarios">
+      <div class="card-body text-center">
+        <i class="bi bi-people-fill fs-1 mb-2"></i>
+        <h5 class="card-title">Usuarios</h5>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4 mb-3">
+    <div class="card h-100" @onclick="GoToTiendas">
+      <div class="card-body text-center">
+        <i class="bi bi-shop-window fs-1 mb-2"></i>
+        <h5 class="card-title">Tiendas</h5>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4 mb-3">
+    <div class="card h-100" @onclick="GoToCarritos">
+      <div class="card-body text-center">
+        <i class="bi bi-cart-fill fs-1 mb-2"></i>
+        <h5 class="card-title">Carritos x Usuario</h5>
+      </div>
+    </div>
+  </div>
+</div>
+
+@code {
+  void GoToUsuarios()  => Nav.NavigateTo("/reports/usuarios");
+  void GoToTiendas()   => Nav.NavigateTo("/reports/tiendas");
+  void GoToCarritos()  => Nav.NavigateTo("/reports/carritos");
+}

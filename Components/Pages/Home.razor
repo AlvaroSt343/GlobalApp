@@ -1,16 +1,110 @@
 ﻿@page "/home"
+@using System
+@using GlobalApp.Models
 @using GlobalApp.Services
 @inject NavigationManager Nav
 @inject SessionService Session
+@inject StoresService StoreService
+@inject LocationService LocationSvc
 
-<h3>Bienvenido a Home</h3>
+<h3>Bienvenido, @userName</h3>
+
+@if (isLoading)
+{
+    <p>Cargando tiendas y ubicación…</p>
+}
+else
+{
+    // nueva seccion
+    // aqui agregar botones tipo card que lleven a las mismas opciones del menu superior
+
+
+    <h4>Nuestros ditribuidores mas cercanos:</h4>
+
+    <div class="store-list">
+        @foreach (var store in stores)
+        {
+            <div class="card store-item mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@store.Name</h5>
+                    <p class="card-text">@store.Location</p>
+                    @if (myLocation != null)
+                    {
+                        <small class="text-muted">
+                            Distancia aproximada: @CalculateDistance(store, myLocation).ToString("F0") km
+                        </small>
+                    }
+                    <div class="mt-2">
+                        <a class="btn btn-primary"
+                           target="_blank"
+                           href="@GetMapsUrl(myLocation, store)">
+                            Cómo llegar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
 
 @code {
-    protected override void OnInitialized()
+    private string userName = "";
+    private List<Stores> stores = new();
+    private Location? myLocation;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
     {
         if (!Session.IsLogged)
         {
             Nav.NavigateTo("/login", true);
+            return;
         }
+
+        userName = Session.getCurrentSessionUsername() ?? "";
+
+        // 1. Obtén ubicación actual
+        myLocation = await LocationSvc.GetCurrentLocationAsync();
+
+        // 2. Carga tiendas desde BD
+        stores = await StoreService.GetAllAsync();
+
+        // 3. Si hay ubicación, ordena por distancia
+        if (myLocation != null)
+        {
+            stores.Sort((a, b) =>
+                CalculateDistance(a, myLocation)
+                .CompareTo(CalculateDistance(b, myLocation)));
+        }
+
+        isLoading = false;
+    }
+
+    private double CalculateDistance(Stores store, Location loc)
+    {
+        // Haversine
+        double R = 6371; // km
+        var dLat = ToRad(store.Latitude - loc.Latitude);
+        var dLon = ToRad(store.Longitude - loc.Longitude);
+        var lat1 = ToRad(loc.Latitude);
+        var lat2 = ToRad(store.Latitude);
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+              + Math.Sin(dLon / 2) * Math.Sin(dLon / 2) * Math.Cos(lat1) * Math.Cos(lat2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return R * c;
+    }
+
+    private double ToRad(double deg) => deg * Math.PI / 180.0;
+
+    private string GetMapsUrl(Location? from, Stores store)
+    {
+        var dest = Uri.EscapeDataString($"{store.Latitude},{store.Longitude}");
+        if (from == null)
+        {
+            // Solo destino
+            return $"https://www.google.com/maps/dir/?api=1&destination={dest}";
+        }
+        var origin = Uri.EscapeDataString($"{from.Latitude},{from.Longitude}");
+        return $"https://www.google.com/maps/dir/?api=1&origin={origin}&destination={dest}";
     }
 }

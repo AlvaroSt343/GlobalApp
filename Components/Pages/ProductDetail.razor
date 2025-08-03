@@ -63,13 +63,14 @@ else
 @code {
     private ProductDetailResponse productDetail;
     private bool isLoading = true;
+    private string GlobalAsin;
 
     protected override async Task OnParametersSetAsync()
     {
         var queryParams = Nav.Uri.Split('?')[1].Split('&');
         var asinParam = queryParams.FirstOrDefault(param => param.StartsWith("asin="));
         var asin = asinParam?.Split('=')[1];
-
+        GlobalAsin = asin;
         if (string.IsNullOrEmpty(asin))
         {
             isLoading = false;
@@ -85,7 +86,8 @@ else
         // Crear un nuevo CartItem
         var cartItem = new CartItem
         {
-            Asin = productDetail.Details.ASIN,
+            Username = "s",
+            Asin = GlobalAsin,
             Title = productDetail.Title,
             Price = productDetail.Price,
             Quantity = 1
@@ -103,6 +105,6 @@ else
 
     private void BuyProduct()
     {
-        Nav.NavigateTo($"/checkout?asin={productDetail.Details.ASIN}&title={productDetail.Title}&price={productDetail.Price}&quantity=1");
+        Nav.NavigateTo($"/checkout?asin={GlobalAsin}&title={productDetail.Title}&price={productDetail.Price}&quantity=1");
     }
 }

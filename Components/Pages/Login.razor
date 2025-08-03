@@ -4,6 +4,7 @@
 @using Microsoft.Maui.Storage
 @inject UserDatabase UserDb
 @inject NavigationManager Nav
+@inject SessionService Session
 
 <div class="login-container">
     <div class="login-box">
@@ -45,7 +46,7 @@
         var user = await UserDb.GetUserAsync(username, password);
         if (user != null)
         {
-            Preferences.Default.Set("isLogged", true);
+            Session.Login(username);
             Nav.NavigateTo("/home");
         }
         else

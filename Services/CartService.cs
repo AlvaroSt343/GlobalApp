@@ -22,5 +22,21 @@ namespace GlobalApp.Services
         {
             return _db.Table<CartItem>().ToListAsync();
         }
+        public async Task<int> GetCartItemCountAsync (string username)
+        {
+            try
+            {
+                return await _db.Table<CartItem>()
+                                .Where(item => item.Username == username)
+                                .CountAsync();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error al contar items en el carrito: {e.Message}");
+                return 0;
+            }
+        }
+
+
     }
 }

@@ -8,6 +8,9 @@ namespace GlobalApp.Models
         public int Id { get; set; }
 
         [NotNull]
+        public string Username { get; set; }
+
+        [NotNull]
         public string Asin { get; set; }
 
         [NotNull]

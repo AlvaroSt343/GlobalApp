@@ -1,0 +1,54 @@
+﻿@page "/reports/carritos"
+@using GlobalApp.Models
+@using GlobalApp.Services
+@inject CartService CartService
+@inject SessionService Session
+@inject NavigationManager Nav
+
+<h3>Reporte de Carritos x Usuario</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ExportToXls">Exportar a XLS</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Usuario</th><th># de Items</th></tr>
+    </thead>
+    <tbody>
+        @foreach(var entry in data)
+        {
+            <tr>
+                <td>@entry.Username</td>
+                <td>@entry.Count</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-secondary" @onclick="GoBack">Volver</button>
+
+@code {
+    class ItemCount { public string Username; public int Count; }
+    private List<ItemCount> data = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Supongamos que CartService.GetCartItemsAsync() devuelve todos los cart items
+        var all = await CartService.GetCartItemsAsync();
+        data = all
+            .GroupBy(c => c.Username)
+            .Select(g => new ItemCount { Username = g.Key, Count = g.Count() })
+            .ToList();
+    }
+
+    private async Task ExportToXls()
+    {
+        var lines = new List<string> { "Usuario,#Items" };
+        lines.AddRange(data.Select(e => $"{e.Username},{e.Count}"));
+        var csv = string.Join("\n", lines);
+        var path = Path.Combine(FileSystem.AppDataDirectory, "reporte_carritos.xls");
+        File.WriteAllText(path, csv);
+        await App.Current.MainPage.DisplayAlert("Exportar", $"Reporte guardado en:\n{path}", "OK");
+    }
+
+    void GoBack()  => Nav.NavigateTo("/reports");
+}

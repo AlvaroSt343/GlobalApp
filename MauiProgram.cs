@@ -21,6 +21,9 @@ namespace GlobalApp
             builder.Services.AddHttpClient<ProductSearchService>();
             builder.Services.AddSingleton<ProductDetailService>();
             builder.Services.AddHttpClient<ProductDetailService>();
+            builder.Services.AddSingleton<CartService>();
+            builder.Services.AddSingleton<StoresService>();
+            builder.Services.AddSingleton<LocationService>();
 
             builder.Services.AddMauiBlazorWebView();
 
@@ -32,10 +35,12 @@ namespace GlobalApp
             // Definir rutas para la base de datos de usuarios y carrito
             string UserdbPath = Path.Combine(FileSystem.AppDataDirectory, "users.db3");
             string CartdbPath = Path.Combine(FileSystem.AppDataDirectory, "cart.db3");
+            string StoresdbPath = Path.Combine(FileSystem.AppDataDirectory, "stores.db3");
 
             // Registrar servicios para UserDatabase y CartService con sus respectivas rutas
             builder.Services.AddSingleton<UserDatabase>(_ => new UserDatabase(UserdbPath));
             builder.Services.AddSingleton<CartService>(_ => new CartService(CartdbPath));
+            builder.Services.AddSingleton<StoresService>(_ => new StoresService(CartdbPath));
 
             // Construir la aplicación
             var app = builder.Build();
@@ -46,20 +51,11 @@ namespace GlobalApp
             return app;
         }
 
-        // Método para inicializar la base de datos y agregar un usuario por defecto
+        // injecta datos a la base de datos
         private static async void InitializeDatabase(IServiceProvider services)
         {
-            var db = services.GetService<UserDatabase>();
-            if (db != null)
-            {
-                // Verificar si ya existe el usuario 'admin' antes de agregarlo
-                var existingUser = await db.GetUserAsync("admin", "1234");
-                if (existingUser == null)
-                {
-                    // Agregar un usuario por defecto si no existe
-                    await db.SaveUserAsync(new Models.User { Username = "admin", Password = "1234" });
-                }
-            }
+            // Llamada a la clase externa que hace todo el seed
+            await DataSeeder.SeedAsync(services);
         }
     }
 }

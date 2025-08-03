@@ -1,4 +1,5 @@
 ﻿using SQLite;
+using System.ComponentModel.DataAnnotations;
 
 namespace GlobalApp.Models;
 
@@ -12,4 +13,6 @@ public class User
 
     [NotNull]
     public string Password { get; set; }
+
+    public string ProfileImage { get; set; }
 }

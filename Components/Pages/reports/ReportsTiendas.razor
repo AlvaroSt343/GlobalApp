@@ -1,0 +1,51 @@
+﻿@page "/reports/tiendas"
+@using GlobalApp.Models
+@using GlobalApp.Services
+@inject StoresService StoreService
+@inject NavigationManager Nav
+
+<h3>Reporte de Tiendas</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ExportToXls">Exportar a XLS</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Id</th><th>Nombre</th><th>Dirección</th><th>Latitud</th><th>Longitud</th></tr>
+    </thead>
+    <tbody>
+        @foreach(var s in stores)
+        {
+            <tr>
+                <td>@s.Id</td>
+                <td>@s.Name</td>
+                <td>@s.Location</td>
+                <td>@s.Latitude</td>
+                <td>@s.Longitude</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-secondary" @onclick="GoBack">Volver</button>
+
+@code {
+    private List<Stores> stores = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        stores = await StoreService.GetAllAsync();
+    }
+
+    private async Task ExportToXls()
+    {
+        var lines = new List<string> { "Id,Nombre,Dirección,Latitud,Longitud" };
+        lines.AddRange(stores.Select(s =>
+            $"{s.Id},{s.Name},{s.Location},{s.Latitude},{s.Longitude}"));
+        var csv = string.Join("\n", lines);
+        var path = Path.Combine(FileSystem.AppDataDirectory, "reporte_tiendas.xls");
+        File.WriteAllText(path, csv);
+        await App.Current.MainPage.DisplayAlert("Exportar", $"Reporte guardado en:\n{path}", "OK");
+    }
+
+    void GoBack()  => Nav.NavigateTo("/reports");
+}

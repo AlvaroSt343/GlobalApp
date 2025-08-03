@@ -17,16 +17,6 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="productsearch">
@@ -34,10 +24,25 @@
             </NavLink>
         </div>
 
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="profile">
+                <span class="bi bi-person-bounding-box" aria-hidden="true"></span> Mi perfil
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="reports">
+                <span class="bi bi-bar-chart-fill-nav-menu" aria-hidden="true"></span> Reportes
+            </NavLink>
+        </div>
+
+
         @if (Session.IsLogged)
         {
-            <div class="nav-item px-3 mt-4">
-                <button class="nav-link btn btn-link text-start text-danger" @onclick="Logout">
+           
+
+            <div class="nav-item px-3">
+                <button class="nav-link btn btn-link text-start text-white" @onclick="Logout">
                     <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Cerrar sesión
                 </button>
             </div>

@@ -1,0 +1,146 @@
+﻿@page "/profile"
+@using GlobalApp.Models
+@using GlobalApp.Services
+@using Microsoft.Maui.Storage
+@inject UserDatabase UserDb
+@inject SessionService SessionService
+@inject NavigationManager Nav
+
+<h3>Perfil del Usuario</h3>
+
+@if (isLoading)
+{
+    <p>Cargando...</p>
+}
+else if (user != null)
+{
+    <div class="card profile-card mx-auto">
+        <div class="card-body text-center">
+            @if (!string.IsNullOrEmpty(user.ProfileImage))
+            {
+                <img src="@user.ProfileImage"
+                     alt="Imagen de perfil"
+                     class="rounded-circle profile-img mb-3" />
+            }
+            else
+            {
+                <div class="profile-img-placeholder rounded-circle mb-3">
+                    <span class="bi bi-person-fill fs-1"></span>
+                </div>
+            }
+            <h4 class="card-title">@user.Username</h4>
+            <p class="card-subtitle text-muted mb-3">
+                Contraseña: <em>••••••••</em>
+            </p>
+
+            <button class="btn btn-outline-success w-100 mb-2"
+                    @onclick="ChangeProfileImage">
+                <i class="bi bi-camera"></i> Cambiar imagen de perfil
+            </button>
+
+            <button class="btn btn-outline-danger w-100"
+                    @onclick="Logout">
+                <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </button>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger mt-3">@errorMessage</div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <p>Usuario no encontrado.</p>
+}
+
+@code {
+    private User? user;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!SessionService.IsLogged)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        var username = SessionService.getCurrentSessionUsername();
+        if (string.IsNullOrEmpty(username))
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        user = await UserDb.GetUserByUsernameAsync(username);
+        isLoading = false;
+    }
+
+    private async Task ChangeProfileImage()
+    {
+        try
+        {
+            var result = await FilePicker.Default.PickAsync(new PickOptions
+            {
+                PickerTitle = "Selecciona una imagen",
+                FileTypes = FilePickerFileType.Images
+            });
+
+            if (result == null)
+                return; // El usuario canceló
+
+            // Copiar fichero a app data (si lo necesitas) o leer directamente el stream
+            using var stream = await result.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            // Detectar MIME según extensión
+            var ext = Path.GetExtension(result.FileName).ToLowerInvariant();
+            var mime = ext switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                _ => "application/octet-stream"
+            };
+
+            // Generar Data URI
+            var b64 = Convert.ToBase64String(bytes);
+            var dataUri = $"data:{mime};base64,{b64}";
+
+            // Guardar en el usuario y en la BD
+            if (user is not null)
+            {
+                user.ProfileImage = dataUri;
+                await UserDb.UpdateUserAsync(user);
+                StateHasChanged();  // forzar re-render
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cambiar la imagen: {ex.Message}";
+        }
+    }
+
+
+    // Devuelve la ruta con file:// para que Blazor la pueda cargar
+    private string GetImageSrc()
+    {
+        if (string.IsNullOrEmpty(user?.ProfileImage))
+            return string.Empty;
+
+        // Asegúrate de usar file:// en todas las plataformas
+        return $"file://{user.ProfileImage}";
+    }
+
+
+    private void Logout()
+    {
+        SessionService.Logout();
+        Nav.NavigateTo("/login");
+    }
+}

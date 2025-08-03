@@ -1,13 +1,27 @@
-﻿namespace GlobalApp.Services;
-
-public class SessionService
+﻿namespace GlobalApp.Services
 {
-    // Devuelve si el usuario está logueado
-    public bool IsLogged => Preferences.Default.Get("isLogged", false);
+    public class SessionService
+    {
+        private const string LoggedKey = "isLogged";
+        private const string UserKey = "currentUser";
 
-    // Establece el estado de sesión a "logueado"
-    public void Login() => Preferences.Default.Set("isLogged", true);
+        public bool IsLogged => Preferences.Default.Get(LoggedKey, false);
+        
+        public string getCurrentSessionUsername()
+        {
+            return Preferences.Default.Get<string?>(UserKey, null); ;
+        }
 
-    // Elimina el estado de sesión (cerrar sesión)
-    public void Logout() => Preferences.Default.Remove("isLogged");
+        public void Login(string username)
+        {
+            Preferences.Default.Set(LoggedKey, true);
+            Preferences.Default.Set(UserKey, username);
+        }
+
+        public void Logout()
+        {
+            Preferences.Default.Remove(LoggedKey);
+            Preferences.Default.Remove(UserKey);
+        }
+    }
 }

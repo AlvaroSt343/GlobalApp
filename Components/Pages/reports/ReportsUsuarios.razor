@@ -1,0 +1,48 @@
+﻿@page "/reports/usuarios"
+@using GlobalApp.Models
+@using GlobalApp.Services
+@inject UserDatabase UserDb
+@inject NavigationManager Nav
+
+<h3>Reporte de Usuarios</h3>
+
+<button class="btn btn-primary mb-3" @onclick="ExportToXls">Exportar a XLS</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Id</th><th>Usuario</th><th>Contraseña</th></tr>
+    </thead>
+    <tbody>
+        @foreach(var u in users)
+        {
+            <tr>
+                <td>@u.Id</td>
+                <td>@u.Username</td>
+                <td>@u.Password</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-secondary" @onclick="GoBack">Volver</button>
+
+@code {
+    private List<User> users = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserDb.GetAllUsersAsync();
+    }
+
+    private async Task ExportToXls()
+    {
+        var lines = new List<string> { "Id,Usuario,Contraseña" };
+        lines.AddRange(users.Select(u => $"{u.Id},{u.Username},{u.Password}"));
+        var csv = string.Join("\n", lines);
+        var path = Path.Combine(FileSystem.AppDataDirectory, "reporte_usuarios.xls");
+        File.WriteAllText(path, csv);
+        await App.Current.MainPage.DisplayAlert("Exportar", $"Reporte guardado en:\n{path}", "OK");
+    }
+
+    void GoBack()  => Nav.NavigateTo("/reports");
+}
