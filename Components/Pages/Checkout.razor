@@ -1,45 +1,128 @@
 ﻿@page "/checkout"
+@using System.Web
 @using GlobalApp.Models
+@using GlobalApp.Services
 @inject NavigationManager Nav
+@inject ProductDetailService ProductDetailService
 
 <h3>Checkout</h3>
 
-@if (cartItem != null)
+@if (isLoading)
 {
-    <div>
-        <h4>@cartItem.Title</h4>
-        <p>Precio: @cartItem.Price</p>
-        <p>Cantidad: @cartItem.Quantity</p>
-        <p>Total: @cartItem.Price * @cartItem.Quantity</p>
+    <p>Cargando detalles del producto…</p>
+}
+else if (product != null)
+{
+    <div class="card mb-4 checkout-card mx-auto">
+        <div class="row g-0">
+            <div class="col-md-4 text-center p-3">
+                @if (product.Images?.Any() == true)
+                {
+                    <img src="@product.Images.First()"
+                         alt="@product.Title"
+                         class="img-fluid product-img" />
+                }
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h4 class="card-title">@product.Title</h4>
+                    <p class="mb-1"><strong>Marca:</strong> @product.Brand</p>
+                    <p class="mb-1"><strong>Vendedor:</strong> @product.SellerName</p>
+                    <p class="mb-3">
+                        <strong>Disponibilidad:</strong>
+                        <span class="@(product.Availability.Contains("In Stock") ? "text-success" : "text-danger")">
+                            @product.Availability
+                        </span>
+                    </p>
+
+                    <div class="price-section mb-3">
+                        @if (!string.IsNullOrEmpty(product.DiscountPercentage))
+                        {
+                            <span class="original-price me-2">
+                                @($"{product.Currency} {product.OriginalPrice}")
+                            </span>
+                            <span class="discount-badge">@product.DiscountPercentage% OFF</span>
+                        }
+                        <h3 class="discounted-price mt-1">
+                            @($"{product.Currency} {product.Price}")
+                        </h3>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="qty" class="form-label"><strong>Cantidad:</strong></label>
+                        <input id="qty"
+                               type="number"
+                               min="1"
+                               class="form-control w-25"
+                               @bind="quantity" />
+                    </div>
+
+                    <h5>Total: <span class="text-primary">@($"{product.Currency} {Total:F2}")</span></h5>
+
+                    <button class="btn btn-success me-2 mt-3" @onclick="ConfirmPurchase">
+                        <i class="bi bi-bag-check"></i> Finalizar Compra
+                    </button>
+                    <button class="btn btn-outline-secondary mt-3" @onclick="Cancel">
+                        <i class="bi bi-arrow-left-circle"></i> Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card about-card mx-auto mb-4">
+        <div class="card-body">
+            <h5>Sobre este artículo</h5>
+            <ul>
+                @foreach (var item in product.AboutThisItem.Take(5))
+                {
+                    <li>@item</li>
+                }
+                @if (product.AboutThisItem.Count > 5)
+                {
+                    <li><em>… más detalles en la página del producto.</em></li>
+                }
+            </ul>
+        </div>
     </div>
 }
-
-<button class="btn btn-primary" @onclick="ProceedToCheckout">Finalizar Compra</button>
+else
+{
+    <p class="text-danger">No se encontraron detalles del producto.</p>
+}
 
 @code {
-    [Parameter] public string Asin { get; set; }
-    [Parameter] public string Title { get; set; }
-    [Parameter] public string Price { get; set; }
-    [Parameter] public int Quantity { get; set; } = 1;
+    private ProductDetailResponse product;
+    private bool isLoading = true;
+    private int quantity = 1;
 
-    private CartItem cartItem;
+    private decimal Total
+        => decimal.TryParse(product.Price, out var p)
+            ? p * quantity
+            : 0m;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Aquí puedes obtener el artículo del carrito utilizando el Asin y otros parámetros.
-        cartItem = new CartItem
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = HttpUtility.ParseQueryString(uri.Query);
+        var asin = query["asin"];
+        if (string.IsNullOrEmpty(asin))
         {
-            Asin = Asin,
-            Title = Title,
-            Price = Price,
-            Quantity = Quantity
-        };
+            isLoading = false;
+            return;
+        }
+
+        product = await ProductDetailService.GetProductDetailsAsync(asin);
+        isLoading = false;
     }
 
-    private void ProceedToCheckout()
+    private void ConfirmPurchase()
     {
-        // Aquí realizarías el proceso de compra
-        // Puedes navegar a una página de confirmación o procesar el pago, etc.
         Nav.NavigateTo("/orderConfirmation");
+    }
+
+    private void Cancel()
+    {
+        Nav.NavigateTo("/productdetail?asin=" + product.Details.ASIN);
     }
 }

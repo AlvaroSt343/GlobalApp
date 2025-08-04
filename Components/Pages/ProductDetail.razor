@@ -84,7 +84,6 @@ else
 
     private async Task AddToCart()
     {
-        
         string userName = Session.getCurrentSessionUsername() ?? "";
 
         var cartItem = new CartItem
@@ -95,13 +94,23 @@ else
             Price = productDetail.Price,
             Quantity = 1
         };
+
         try
         {
             await CartService.SaveToCartAsync(cartItem);
+
+            // Mensaje de éxito
+            await Application.Current
+                             .MainPage
+                             .DisplayAlert("Éxito", "Producto agregado al carrito", "OK");
         }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
+            // Mensaje de error
+            await Application.Current
+                             .MainPage
+                             .DisplayAlert("Error", $"No se pudo agregar al carrito: {e.Message}", "OK");
             throw;
         }
     }
