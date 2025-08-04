@@ -2,6 +2,7 @@
 @using GlobalApp.Models
 @using GlobalApp.Services
 @inject ProductDetailService ProductDetailService
+@inject SessionService Session
 @inject CartService CartService
 @inject NavigationManager Nav
 
@@ -83,10 +84,12 @@ else
 
     private async Task AddToCart()
     {
-        // Crear un nuevo CartItem
+        
+        string userName = Session.getCurrentSessionUsername() ?? "";
+
         var cartItem = new CartItem
         {
-            Username = "s",
+            Username = userName,
             Asin = GlobalAsin,
             Title = productDetail.Title,
             Price = productDetail.Price,
